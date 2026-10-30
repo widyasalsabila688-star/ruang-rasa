@@ -853,3 +853,210 @@ button {
     font-size: 11px;
   }
 }
+
+/* =========================
+   ADMIN CMS RUANG RASA
+========================= */
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f7f5ef;
+}
+
+.admin-sidebar {
+  width: 245px;
+  flex-shrink: 0;
+  padding: 35px 24px;
+  display: flex;
+  flex-direction: column;
+  background: #292c24;
+  color: #fffefa;
+}
+
+.admin-sidebar h2 {
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: 2px;
+}
+
+.admin-label {
+  color: #a9a98e;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+}
+
+.admin-sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 35px;
+}
+
+.admin-sidebar nav a,
+.admin-back {
+  padding: 12px;
+  color: #e8e7df;
+  text-decoration: none;
+  font-size: 13px;
+  border-radius: 3px;
+}
+
+.admin-sidebar nav a:hover {
+  background: #515944;
+}
+
+.admin-back {
+  margin-top: auto;
+  border-top: 1px solid #55594e;
+  border-radius: 0;
+  padding-top: 25px;
+}
+
+.admin-content {
+  flex: 1;
+  min-width: 0;
+  padding: 55px 5%;
+}
+
+.admin-content h1 {
+  margin: 5px 0 8px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 38px;
+  font-weight: 400;
+}
+
+.admin-content > p:not(.admin-label) {
+  color: #77776e;
+  font-size: 13px;
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 35px;
+}
+
+.admin-card {
+  padding: 25px;
+  background: #fffefa;
+  border: 1px solid #dedbd1;
+}
+
+.admin-card span {
+  color: #77776e;
+  font-size: 12px;
+}
+
+.admin-card h2 {
+  margin: 12px 0 0;
+  font-size: 30px;
+  font-weight: 500;
+}
+
+.admin-welcome,
+.admin-table-section {
+  margin-top: 30px;
+  padding: 25px;
+  background: #fffefa;
+  border: 1px solid #dedbd1;
+}
+
+.admin-welcome h2,
+.admin-table-heading h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.admin-welcome p {
+  color: #77776e;
+  font-size: 13px;
+}
+
+.admin-table-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 22px;
+}
+
+.admin-table-heading span {
+  color: #77776e;
+  font-size: 12px;
+}
+
+.admin-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 15px 12px;
+  border-bottom: 1px solid #dedbd1;
+}
+
+.admin-table th {
+  color: #77776e;
+  font-weight: 600;
+  background: #f7f5ef;
+}
+
+.admin-empty {
+  padding: 40px 15px;
+  text-align: center;
+  border: 1px dashed #dedbd1;
+}
+
+.admin-empty p {
+  font-weight: 600;
+}
+
+.admin-empty span {
+  color: #77776e;
+  font-size: 12px;
+}
+
+@media (max-width: 750px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    padding: 22px;
+  }
+
+  .admin-sidebar nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 15px;
+  }
+
+  .admin-back {
+    margin-top: 15px;
+  }
+
+  .admin-content {
+    padding: 30px 5%;
+  }
+
+  .admin-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-content h1 {
+    font-size: 32px;
+  }
+}

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -8,8 +8,15 @@ import {
   useNavigate,
   useParams,
   useSearchParams,
+  useLocation,
 } from "react-router-dom";
 import "./App.css";
+
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminLogin from "./pages/admin/AdminLogin";
 
 const heroImage = "/nasi-ayam-sambal-matah.jpg";
 
@@ -33,99 +40,6 @@ const categories = [
     name: "Minuman",
     description: "Kesegaran untuk menemani suasana.",
     image: "/es-teh-manis.jpg",
-  },
-];
-
-const products = [
-  {
-    id: 1,
-    name: "Nasi Goreng Kampung",
-    category: "Makanan Utama",
-    price: 22000,
-    image: "/nasi-goreng-kampung.jpg",
-    description: "Nasi goreng berbumbu khas dengan rasa gurih.",
-  },
-  {
-    id: 2,
-    name: "Nasi Ayam Sambal Matah",
-    category: "Makanan Utama",
-    price: 25000,
-    image: heroImage,
-    description:
-      "Nasi hangat dengan ayam gurih dan sambal matah segar.",
-  },
-  {
-    id: 3,
-    name: "Nasi Ayam Mentega",
-    category: "Makanan Utama",
-    price: 25000,
-    image: "/nasi-ayam-mentega.jpg",
-    description: "Ayam saus mentega gurih disajikan dengan nasi hangat.",
-  },
-  {
-    id: 4,
-    name: "Tahu Gejrot",
-    category: "Camilan",
-    price: 15000,
-    image: "/tahu-gejrot.jpg",
-    description: "Tahu dengan kuah asam manis pedas khas.",
-  },
-  {
-    id: 5,
-    name: "Pisang Goreng",
-    category: "Camilan",
-    price: 15000,
-    image: "/pisang-goreng.jpg",
-    description: "Pisang goreng hangat dengan tekstur renyah.",
-  },
-  {
-    id: 6,
-    name: "Bakwan Jagung",
-    category: "Camilan",
-    price: 12000,
-    image: "/bakwan-jagung.jpg",
-    description: "Bakwan jagung gurih dan renyah.",
-  },
-  {
-    id: 7,
-    name: "Cendol Dawet",
-    category: "Dessert",
-    price: 15000,
-    image: "/cendol-dawet.jpg",
-    description: "Cendol segar dengan santan dan gula aren.",
-  },
-  {
-    id: 8,
-    name: "Klepon",
-    category: "Dessert",
-    price: 12000,
-    image: "/klepon.jpg",
-    description:
-      "Kue tradisional berisi gula merah dengan balutan kelapa.",
-  },
-  {
-    id: 9,
-    name: "Es Teh Manis",
-    category: "Minuman",
-    price: 7000,
-    image: "/es-teh-manis.jpg",
-    description: "Teh manis dingin yang menyegarkan.",
-  },
-  {
-    id: 10,
-    name: "Kopi Susu Gula Aren",
-    category: "Minuman",
-    price: 18000,
-    image: "/kopi-susu-gula-aren.jpg",
-    description: "Perpaduan kopi, susu, dan gula aren.",
-  },
-  {
-    id: 11,
-    name: "Air Mineral",
-    category: "Minuman",
-    price: 5000,
-    image: "/air-mineral.jpg",
-    description: "Air mineral untuk menemani hidanganmu.",
   },
 ];
 
@@ -209,9 +123,7 @@ function Home() {
     <main className="website">
       <section className="hero-section">
         <div className="hero-content">
-          <p className="eyebrow">
-            RESTORAN · INDONESIAN COMFORT FOOD
-          </p>
+          <p className="eyebrow">RESTORAN · INDONESIAN COMFORT FOOD</p>
 
           <h1>
             Satu meja,
@@ -306,7 +218,7 @@ function Home() {
   );
 }
 
-function MenuPage({ onAdd }) {
+function MenuPage({ onAdd, products, productsLoading, productsError }) {
   const [params, setParams] = useSearchParams();
   const selected = params.get("category") || "Semua";
   const [keyword, setKeyword] = useState("");
@@ -358,27 +270,50 @@ function MenuPage({ onAdd }) {
         ))}
       </div>
 
-      <div className="simple-product-grid">
-        {filtered.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            onAdd={onAdd}
-          />
-        ))}
-      </div>
+      {productsLoading ? (
+        <p className="empty-message">Memuat produk...</p>
+      ) : productsError ? (
+        <p className="empty-message">{productsError}</p>
+      ) : (
+        <div className="simple-product-grid">
+          {filtered.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onAdd={onAdd}
+            />
+          ))}
+        </div>
+      )}
 
-      {filtered.length === 0 && (
+      {!productsLoading && !productsError && filtered.length === 0 && (
         <p className="empty-message">Menu belum ditemukan.</p>
       )}
     </main>
   );
 }
 
-function DetailPage({ onAdd }) {
+function DetailPage({ onAdd, products, productsLoading, productsError }) {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const product = products.find((item) => item.id === Number(id));
+
+  if (productsLoading) {
+    return (
+      <main className="simple-page">
+        <p>Memuat produk...</p>
+      </main>
+    );
+  }
+
+  if (productsError) {
+    return (
+      <main className="simple-page">
+        <p>{productsError}</p>
+      </main>
+    );
+  }
 
   if (!product) {
     return (
@@ -710,6 +645,39 @@ function CheckoutPage({ cart, onClearCart }) {
 function Website() {
   const [cart, setCart] = useState([]);
 
+  // Mengambil data produk dari backend
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState("");
+
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const response = await fetch("http://localhost:5000/api/products");
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Gagal mengambil data produk.");
+        }
+
+        const productData = Array.isArray(result.data)
+          ? result.data
+          : result.data?.products || [];
+
+        setProducts(productData);
+      } catch (error) {
+        setProductsError(error.message || "Terjadi kesalahan koneksi API.");
+      } finally {
+        setProductsLoading(false);
+      }
+    }
+
+    fetchProducts();
+  }, []);
+
   function addToCart(product) {
     setCart((current) => {
       const existing = current.find((item) => item.id === product.id);
@@ -747,15 +715,41 @@ function Website() {
 
   return (
     <>
-      <Header cartCount={cartCount} />
+      {!isAdmin && <Header cartCount={cartCount} />}
 
       <Routes>
+        {/* ADMIN */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/products" element={<AdminProducts />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/admin/orders" element={<AdminOrders />} />
+
+        {/* CUSTOMER */}
         <Route path="/" element={<Home />} />
-        <Route path="/menu" element={<MenuPage onAdd={addToCart} />} />
+
+        <Route
+          path="/menu"
+          element={
+            <MenuPage
+              onAdd={addToCart}
+              products={products}
+              productsLoading={productsLoading}
+              productsError={productsError}
+            />
+          }
+        />
 
         <Route
           path="/produk/:id"
-          element={<DetailPage onAdd={addToCart} />}
+          element={
+            <DetailPage
+              onAdd={addToCart}
+              products={products}
+              productsLoading={productsLoading}
+              productsError={productsError}
+            />
+          }
         />
 
         <Route
@@ -792,7 +786,7 @@ function Website() {
         />
       </Routes>
 
-      <Footer />
+      {!isAdmin && <Footer />}
     </>
   );
 }
