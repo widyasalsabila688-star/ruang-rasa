@@ -17,6 +17,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminLogin from "./pages/admin/AdminLogin";
+import { API_URL } from "./constants";
 
 const heroImage = "/nasi-ayam-sambal-matah.jpg";
 
@@ -656,7 +657,7 @@ function Website() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const response = await fetch("http://localhost:5000/api/products");
+        const response = await fetch(`${API_URL}/api/products`);
         const result = await response.json();
 
         if (!response.ok) {
