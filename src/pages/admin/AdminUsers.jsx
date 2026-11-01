@@ -1,43 +1,72 @@
-
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { apiRequest } from "../../api";
+import { formatDate } from "../../utils/format";
+import AdminLayout from "./AdminLayout";
 
 export default function AdminUsers() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    apiRequest("/users")
+      .then((data) => setUsers(Array.isArray(data) ? data : []))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
-    <div className="admin-layout">
-      <aside className="admin-sidebar">
-        <h2>RUANG RASA</h2>
-        <p className="admin-label">ADMIN PANEL</p>
-        <nav>
-          <Link to="/admin">Dashboard</Link>
-          <Link to="/admin/products">Manage Products</Link>
-          <Link to="/admin/users">Manage Users</Link>
-          <Link to="/admin/orders">Manage Orders</Link>
-        </nav>
-        <Link to="/" className="admin-back">
-          ← Kembali ke Website
-        </Link>
-      </aside>
+    <AdminLayout>
+      <p className="admin-label">USER MANAGEMENT</p>
+      <h1>Manage Users</h1>
+      <p>Kelola informasi dan data pengguna Ruang Rasa.</p>
 
-      <main className="admin-content">
-        <p className="admin-label">USER MANAGEMENT</p>
-        <h1>Manage Users</h1>
-        <p>Kelola informasi dan data pengguna Ruang Rasa.</p>
+      <section className="admin-table-section">
+        <div className="admin-table-heading">
+          <h2>Daftar Pengguna</h2>
+          <span>{users.length} Pengguna</span>
+        </div>
 
-        <section className="admin-table-section">
-          <div className="admin-table-heading">
-            <h2>Daftar Pengguna</h2>
-            <span>Data Pengguna</span>
-          </div>
+        {loading && <p className="empty-message">Memuat pengguna...</p>}
+        {error && <p className="form-error">{error}</p>}
 
+        {!loading && !error && users.length === 0 && (
           <div className="admin-empty">
             <p>Belum ada data pengguna.</p>
-            <span>
-              Data pengguna akan ditampilkan setelah frontend
-              terhubung dengan backend.
-            </span>
           </div>
-        </section>
-      </main>
-    </div>
+        )}
+
+        {users.length > 0 && (
+          <div className="admin-table-wrapper">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Nama</th>
+                  <th>Email</th>
+                  <th>Telepon</th>
+                  <th>Role</th>
+                  <th>Terdaftar</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id || user._id}>
+                    <td>{user.name}</td>
+                    <td>{user.email}</td>
+                    <td>{user.phone || "-"}</td>
+                    <td>
+                      <span className={`role-badge ${user.role === "admin" ? "role-admin" : ""}`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td>{formatDate(user.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </AdminLayout>
   );
 }

@@ -17,6 +17,15 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminLogin from "./pages/admin/AdminLogin";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import ProfilePage from "./pages/ProfilePage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./context/AuthContext";
+import { useAuth } from "./context/useAuth";
+import { apiRequest } from "./api";
+import { trackEvent } from "./analytics";
+import { rupiah } from "./utils/format";
 import { API_URL } from "./constants";
 
 const heroImage = "/nasi-ayam-sambal-matah.jpg";
@@ -44,14 +53,9 @@ const categories = [
   },
 ];
 
-const rupiah = (value) =>
-  new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(value);
-
 function Header({ cartCount }) {
+  const { user, isLoggedIn } = useAuth();
+
   return (
     <header className="navbar">
       <Link to="/" className="brand">
@@ -64,9 +68,21 @@ function Header({ cartCount }) {
         <a href="/#tentang-kami">Tentang Kami</a>
       </nav>
 
-      <Link to="/keranjang" className="nav-button">
-        Keranjang ({cartCount})
-      </Link>
+      <div className="nav-actions">
+        {isLoggedIn ? (
+          <Link to="/profil" className="nav-account">
+            Hai, {(user.name || "Akun").split(" ")[0]}
+          </Link>
+        ) : (
+          <Link to="/login" className="nav-account">
+            Masuk
+          </Link>
+        )}
+
+        <Link to="/keranjang" className="nav-button">
+          Keranjang ({cartCount})
+        </Link>
+      </div>
     </header>
   );
 }
@@ -449,32 +465,74 @@ function CartPage({ cart, onQuantityChange, onRemove }) {
 }
 
 function CheckoutPage({ cart, onClearCart }) {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const { user } = useAuth();
+
+  // Nama dan telepon langsung terisi dari akun yang sedang login
+  const [name, setName] = useState(user?.name || "");
+  const [phone, setPhone] = useState(user?.phone || "");
   const [orderType, setOrderType] = useState("dine-in");
   const [paymentMethod, setPaymentMethod] = useState("qris");
-  const [success, setSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [order, setOrder] = useState(null);
 
   const total = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
 
-  function submitOrder(event) {
+  async function submitOrder(event) {
     event.preventDefault();
 
     if (!cart.length) return;
 
-    onClearCart();
-    setSuccess(true);
+    setSubmitting(true);
+    setError("");
+
+    try {
+      // Pesanan dikirim ke backend dan tersimpan di MongoDB, jadi bisa dipantau admin
+      const created = await apiRequest("/orders", {
+        method: "POST",
+        body: JSON.stringify({
+          customerName: name.trim(),
+          phone: phone.trim(),
+          orderType,
+          paymentMethod,
+          items: cart.map((item) => ({ id: item.id, quantity: item.quantity })),
+          total,
+        }),
+      });
+
+      trackEvent("purchase", {
+        transaction_id: String(created?.id ?? ""),
+        value: total,
+        currency: "IDR",
+        items: cart.map((item) => ({
+          item_id: String(item.id),
+          item_name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+      });
+
+      setOrder(created || {});
+      onClearCart();
+    } catch (err) {
+      setError(err.message || "Pesanan gagal dibuat.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  if (success) {
+  if (order) {
     return (
       <main className="simple-page checkout-success">
         <p className="eyebrow">RUANG RASA</p>
         <h1>Terima kasih, {name}!</h1>
-        <p>Pesanan kamu berhasil dibuat.</p>
+        <p>
+          Pesanan{order.id ? ` #${order.id}` : ""} berhasil dibuat dan sudah
+          diterima restoran.
+        </p>
 
         <p className="page-intro">
           Metode pemesanan:{" "}
@@ -504,13 +562,17 @@ function CheckoutPage({ cart, onClearCart }) {
         )}
 
         <p className="page-intro">
-          Simpan informasi pesanan ini sebagai referensi. Sistem saat ini
-          belum mengirim pesanan ke restoran secara langsung.
+          Status pesanan bisa kamu pantau di halaman profil.
         </p>
 
-        <Link to="/menu" className="primary-button">
-          Kembali ke Menu
-        </Link>
+        <div className="profile-actions">
+          <Link to="/profil" className="primary-button">
+            Lihat Status Pesanan
+          </Link>
+          <Link to="/menu" className="outline-button">
+            Kembali ke Menu
+          </Link>
+        </div>
       </main>
     );
   }
@@ -634,8 +696,18 @@ function CheckoutPage({ cart, onClearCart }) {
             <strong>{rupiah(total)}</strong>
           </div>
 
-          <button className="primary-button" type="submit">
-            Buat Pesanan
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <button
+            className="primary-button"
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? "Mengirim pesanan..." : "Buat Pesanan"}
           </button>
         </form>
       )}
@@ -643,8 +715,24 @@ function CheckoutPage({ cart, onClearCart }) {
   );
 }
 
+const CART_KEY = "ruangRasaCart";
+
+function readSavedCart() {
+  try {
+    return JSON.parse(localStorage.getItem(CART_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
 function Website() {
-  const [cart, setCart] = useState([]);
+  // Keranjang disimpan di localStorage, jadi tidak hilang saat halaman di-refresh
+  // atau saat pelanggan diarahkan ke halaman login sebelum checkout.
+  const [cart, setCart] = useState(readSavedCart);
+
+  useEffect(() => {
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  }, [cart]);
 
   // Mengambil data produk dari backend
   const [products, setProducts] = useState([]);
@@ -653,6 +741,11 @@ function Website() {
 
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
+
+  // Setiap pindah halaman, mulai dari atas lagi (misalnya setelah login lanjut ke checkout)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -719,12 +812,52 @@ function Website() {
       {!isAdmin && <Header cartCount={cartCount} />}
 
       <Routes>
-        {/* ADMIN */}
+        {/* ADMIN: semua halaman di bawah /admin hanya untuk role admin */}
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/products" element={<AdminProducts />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
-        <Route path="/admin/orders" element={<AdminOrders />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/products"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminProducts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminUsers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/orders"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* AKUN */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/daftar" element={<RegisterPage />} />
+        <Route
+          path="/profil"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* CUSTOMER */}
         <Route path="/" element={<Home />} />
@@ -767,10 +900,13 @@ function Website() {
         <Route
           path="/checkout"
           element={
-            <CheckoutPage
-              cart={cart}
-              onClearCart={() => setCart([])}
-            />
+            // Checkout butuh login supaya pesanan tercatat di akun pelanggan
+            <ProtectedRoute>
+              <CheckoutPage
+                cart={cart}
+                onClearCart={() => setCart([])}
+              />
+            </ProtectedRoute>
           }
         />
 
@@ -795,7 +931,9 @@ function Website() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Website />
+      <AuthProvider>
+        <Website />
+      </AuthProvider>
     </BrowserRouter>
   );
 }

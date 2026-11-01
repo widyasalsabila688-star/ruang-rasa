@@ -1060,3 +1060,251 @@ button {
     font-size: 32px;
   }
 }
+
+/* AKUN: navbar, login, daftar, profil */
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.nav-account {
+  color: var(--dark);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.nav-account:hover {
+  color: var(--olive);
+}
+
+.auth-page .simple-checkout {
+  max-width: 440px;
+}
+
+.auth-switch {
+  margin-top: 24px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.auth-switch a {
+  color: var(--olive);
+  font-weight: 600;
+}
+
+.form-error {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 3px solid #925e50;
+  background: #f6ebe6;
+  color: #7a4537;
+  font-size: 13px;
+}
+
+.primary-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.outline-button {
+  min-height: 50px;
+  padding: 13px 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--olive);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--olive);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.outline-button:hover {
+  background: var(--olive);
+  color: white;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  max-width: 620px;
+  margin-top: 28px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: var(--white);
+}
+
+.profile-card h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.profile-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--olive);
+  color: white;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.role-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: #ebece3;
+  color: var(--olive);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.role-badge.role-admin {
+  background: var(--dark);
+  color: white;
+}
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.section-title {
+  margin: 48px 0 18px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.order-list {
+  display: grid;
+  gap: 16px;
+  max-width: 620px;
+}
+
+.order-card {
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: var(--white);
+}
+
+.order-card-head,
+.order-card-foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.order-card-head div {
+  display: grid;
+}
+
+.order-card-head span:not(.status-badge),
+.order-card-foot span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.order-card ul {
+  margin: 14px 0;
+  padding-left: 18px;
+}
+
+.status-badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #ebece3;
+  color: var(--olive);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge.status-completed {
+  background: var(--olive);
+  color: white;
+}
+
+.status-badge.status-ready {
+  background: var(--dark);
+  color: white;
+}
+
+.status-badge.status-cancelled {
+  background: #f6ebe6;
+  color: #925e50;
+}
+
+/* ADMIN: akun & status pesanan */
+
+.admin-sidebar nav a.active {
+  background: #515944;
+}
+
+.admin-account {
+  display: grid;
+  gap: 2px;
+  margin-top: 30px;
+  font-size: 12px;
+  color: #a9a98e;
+}
+
+.admin-account strong {
+  color: #fffefa;
+  font-size: 13px;
+}
+
+.admin-account button {
+  width: fit-content;
+  margin-top: 10px;
+  padding: 6px 14px;
+  border: 1px solid #55594e;
+  border-radius: 3px;
+  background: transparent;
+  color: #e8e7df;
+  font-size: 12px;
+}
+
+.admin-account button:hover {
+  background: #515944;
+}
+
+.status-select {
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--white);
+  color: var(--dark);
+  font: inherit;
+  font-size: 12px;
+}
+
+@media (max-width: 650px) {
+  .nav-actions {
+    gap: 12px;
+  }
+
+  .profile-card {
+    align-items: flex-start;
+  }
+}
